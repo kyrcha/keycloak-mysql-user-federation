@@ -16,9 +16,9 @@
 package info.kyrcha.keycloak.mysqluserfederation;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Collections;
 import java.util.Set;
 
@@ -55,15 +55,16 @@ public class MySQLUserStorageProvider
 
     @Override
     public UserModel getUserByUsername(String username, RealmModel realm) {
-        Statement stmt = null;
+        PreparedStatement pstmt = null;
         ResultSet rs = null;
         UserModel adapter = null;
         try {
-            stmt = conn.createStatement();
-            rs = stmt.executeQuery("SELECT " + this.config.getConfig().getFirst("usernamecol") + ", "
+            String query = "SELECT " + this.config.getConfig().getFirst("usernamecol") + ", "
                     + this.config.getConfig().getFirst("passwordcol") + " FROM "
                     + this.config.getConfig().getFirst("table") + " WHERE "
-                    + this.config.getConfig().getFirst("usernamecol") + "=" + username + ";");
+                    + this.config.getConfig().getFirst("usernamecol") + "=?;";
+            pstmt = conn.prepareStatement(query);
+            pstmt.setString(1, username);
             String pword = null;
             if (rs.next()) {
                 pword = rs.getString(this.config.getConfig().getFirst("passwordcol"));
@@ -92,13 +93,13 @@ public class MySQLUserStorageProvider
                 rs = null;
             }
 
-            if (stmt != null) {
+            if (pstmt != null) {
                 try {
-                    stmt.close();
+                    pstmt.close();
                 } catch (SQLException sqlEx) {
                 } // ignore
 
-                stmt = null;
+                pstmt = null;
             }
         }
         return adapter;
@@ -128,14 +129,16 @@ public class MySQLUserStorageProvider
     @Override
     public boolean isConfiguredFor(RealmModel realm, UserModel user, String credentialType) {
         String password = null;
-        Statement stmt = null;
+        PreparedStatement pstmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.createStatement();
-            rs = stmt.executeQuery("SELECT " + this.config.getConfig().getFirst("usernamecol") + ", "
+            String query = "SELECT " + this.config.getConfig().getFirst("usernamecol") + ", "
                     + this.config.getConfig().getFirst("passwordcol") + " FROM "
                     + this.config.getConfig().getFirst("table") + " WHERE "
-                    + this.config.getConfig().getFirst("usernamecol") + "=" + user.getUsername() + ";");
+                    + this.config.getConfig().getFirst("usernamecol") + "=?;";
+            pstmt = conn.prepareStatement(query);
+            pstmt.setString(1, user.getUsername());
+            rs = pstmt.executeQuery();
             if (rs.next()) {
                 password = rs.getString(this.config.getConfig().getFirst("passwordcol"));
             }
@@ -160,13 +163,13 @@ public class MySQLUserStorageProvider
                 rs = null;
             }
 
-            if (stmt != null) {
+            if (pstmt != null) {
                 try {
-                    stmt.close();
+                    pstmt.close();
                 } catch (SQLException sqlEx) {
                 } // ignore
 
-                stmt = null;
+                pstmt = null;
             }
         }
         return credentialType.equals(CredentialModel.PASSWORD) && password != null;
@@ -182,14 +185,16 @@ public class MySQLUserStorageProvider
         if (!supportsCredentialType(input.getType()))
             return false;
         String password = null;
-        Statement stmt = null;
+        PreparedStatement pstmt = null;
         ResultSet rs = null;
         try {
-            stmt = conn.createStatement();
-            rs = stmt.executeQuery("SELECT " + this.config.getConfig().getFirst("usernamecol") + ", "
+            String query = "SELECT " + this.config.getConfig().getFirst("usernamecol") + ", "
                     + this.config.getConfig().getFirst("passwordcol") + " FROM "
                     + this.config.getConfig().getFirst("table") + " WHERE "
-                    + this.config.getConfig().getFirst("usernamecol") + "=" + user.getUsername() + ";");
+                    + this.config.getConfig().getFirst("usernamecol") + "=?;";
+            pstmt = conn.prepareStatement(query);
+            pstmt.setString(1, user.getUsername());
+            rs = pstmt.executeQuery();
             if (rs.next()) {
                 password = rs.getString(this.config.getConfig().getFirst("passwordcol"));
             }
@@ -214,13 +219,13 @@ public class MySQLUserStorageProvider
                 rs = null;
             }
 
-            if (stmt != null) {
+            if (pstmt != null) {
                 try {
-                    stmt.close();
+                    pstmt.close();
                 } catch (SQLException sqlEx) {
                 } // ignore
 
-                stmt = null;
+                pstmt = null;
             }
         }
 
