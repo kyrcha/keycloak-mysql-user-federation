@@ -65,6 +65,7 @@ public class MySQLUserStorageProvider
                     + this.config.getConfig().getFirst("usernamecol") + "=?;";
             pstmt = conn.prepareStatement(query);
             pstmt.setString(1, username);
+            rs = pstmt.executeQuery();
             String pword = null;
             if (rs.next()) {
                 pword = rs.getString(this.config.getConfig().getFirst("passwordcol"));
